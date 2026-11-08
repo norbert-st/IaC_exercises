@@ -1,13 +1,21 @@
-param appserviceName string = 'toy-product-launch-ns12345'
 param location string = 'swedencentral'
+param storageAccountName string = 'toylaunch${uniqueString(resourceGroup().id)}'
+param appServiceAppName string = 'toylaunch${uniqueString(resourceGroup().id)}'
+@allowed([
+  'nonprod'
+  'prod'
+])
+param environmentType string
+var storageAccountSkuName = (environmentType == 'prod') ? 'Standard_GRS' : 'Standard_LRS'
+var appServicePlanSkuName = (environmentType == 'prod') ? 'P2v3' : 'F1'
 
 var appservicePlanName = 'toy-product-launch-plan-starter'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: 'toylaunchstoragens12345'
+  name: storageAccountName
   location: location
   sku: {
-    name: 'Standard_LRS'
+    name: storageAccountSkuName
 }
 kind: 'StorageV2'
 properties: {
@@ -18,12 +26,12 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: appservicePlanName
   location: location
   sku: {
-    name: 'F1'
+    name: appServicePlanSkuName
   }
 }
 
 resource appServiceApp 'Microsoft.Web/sites@2024-04-01' = {
-  name: appserviceName
+  name: appServiceAppName
   location: location
   properties: {
     serverFarmId: appServicePlan.id
